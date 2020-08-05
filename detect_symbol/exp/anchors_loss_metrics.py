@@ -30,6 +30,23 @@ import math
 
 #================================================
 def get_grids_anchors(fig_hw, grids, anchors):
+    '''
+    生成所有grid和anchor的位置和形状信息。
+    参数：
+        fig_hw：图片尺寸，其形式为：(h，w)，例如（512，512）;
+        grids：各层特征图的尺寸，其形式为：[(h0,w0),(h1,w1),...]
+        anchors：各层特征图上使用的anchor的尺寸，每层特征图可以有多个anchor，且各层的anchor数不必相等。
+            其形式为：[[(h00,w00),(h01,w01),...], [(h10,w10),(h11,w11),...], ...]
+
+    返回值：
+        gvs: 各grid的左上和右下角的坐标
+        ghs：各grid的高度
+        gws：各grid的宽度
+        avs：各anchor的左上和右下角的坐标
+        ahs：各anchor的高度
+        aws：各anchor的宽度
+        注意：以上坐标、高度、宽度都是以图片尺寸(fig_hw)为单位参照的
+    '''
     fig_h,fig_w = fig_hw
     anchors = [[(ah/fig_h, aw/fig_w) for (ah,aw) in ancs] for ancs in anchors]
     gridCnrs_ancCnrs = tensor([[x/gx, y/gy, (x+1)/gx, (y+1)/gy,
@@ -57,7 +74,7 @@ def get_grids_anchors(fig_hw, grids, anchors):
 
 
 #================================================
-# 此函数仅为方便其它测试的调用
+# 此函数仅在detect_symbol项目下使用
 def get_ga433():
     return get_grids_anchors(fig_hw = (784,784),
                               grids = [(49,49),(25,25),(13,13)],
@@ -67,6 +84,7 @@ def get_ga433():
 
 
 #================================================
+# 此函数仅在detect_symbol项目下使用
 def get_ga444():
     return get_grids_anchors(fig_hw = (784,784),
                               grids = [(49,49),(25,25),(13,13)],
@@ -76,6 +94,7 @@ def get_ga444():
 
 
 #================================================
+# 此函数仅在detect_symbol项目下使用
 def get_ga666():
     return get_grids_anchors(fig_hw = (776,776),
                               grids = [(97,97),(49,49),(25,25)],
