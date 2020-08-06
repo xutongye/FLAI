@@ -31,24 +31,40 @@ import math
 #================================================
 def get_grids_anchors(fig_hw, grids, anchors):
     '''
-    生成所有grid和anchor的位置和形状信息。
+    --------
+    功能：
+        根据设置，生成所有 grid-anchor 组合的坐标和形状信息。
+    --------
     参数：
-        fig_hw：图片尺寸，其形式为：(h，w)，例如（512，512）;
-        grids：各层特征图的尺寸，其形式为：[(h0,w0),(h1,w1),...]
-        anchors：各层特征图上使用的anchor的尺寸，每层特征图可以有多个anchor，且各层的anchor数不必相等。
-            其形式为：[[(h00,w00),(h01,w01),...], [(h10,w10),(h11,w11),...], ...]
-
+        fig_hw：图片尺寸，其形式为 (h，w);
+        grids：各层特征图的栅格尺寸，其形式为 [(h0,w0),(h1,w1),...]
+        anchors：各层特征图上使用的 anchor 的尺寸，每层特征图可以有多个 anchor，且各层的 anchor 数不必相等。
+    其形式为：[[(h00,w00),(h01,w01),...], [(h10,w10),(h11,w11),...], ...]
+    --------
     返回值：
-        gvs: 各grid的左上和右下角的坐标
-        ghs：各grid的高度
-        gws：各grid的宽度
-        avs：各anchor的左上和右下角的坐标
-        ahs：各anchor的高度
-        aws：各anchor的宽度
-        注意：以上坐标、高度、宽度都是以图片尺寸(fig_hw)为单位参照的
+        gvs: 各 grid-anchor 组合的 grid 的左上和右下角的坐标
+        ghs：各 grid-anchor 组合的 grid 的高度
+        gws：各 grid-anchor 组合的 grid 的宽度
+        avs：各 grid-anchor 组合的 anchor 的左上和右下角的坐标
+        ahs：各 grid-anchor 组合的 anchor 的高度
+        aws：各 grid-anchor 组合的 anchor 的宽度
+        注意：以上坐标、高度、宽度都是归一化到图片尺寸(fig_hw)的.
     '''
+    # figure height, figure width
     fig_h,fig_w = fig_hw
+
+    # anchor 尺寸归一化到图片尺寸
     anchors = [[(ah/fig_h, aw/fig_w) for (ah,aw) in ancs] for ancs in anchors]
+
+    # 生成所有 grid-anchor 组合，索引变化的顺序是先x后y. 每个组合下的信息都是都是归一化到图片尺寸的，包括：
+    # x/gx：grid的左上角的x坐标
+    # y/gy：grid的左上角的y坐标
+    # (x+1)/gx：grid的右下角的x坐标
+    # (y+1)/gy：grid的右下角的y坐标
+    # -ax/2：anchor左上角相对于自身中心的x坐标
+    # -ay/2：anchor左上角相对于自身中心的y坐标
+    # ax/2：anchor右下角相对于自身中心的x坐标
+    # ay/2：anchor右下角相对于自身中心的y坐标
     gridCnrs_ancCnrs = tensor([[x/gx, y/gy, (x+1)/gx, (y+1)/gy,
                                 -ax/2, -ay/2, ax/2, ay/2]
                                 for (gx,gy),ancs in zip(grids,anchors)
@@ -56,14 +72,14 @@ def get_grids_anchors(fig_hw, grids, anchors):
                                 for x in range(gx)
                                 for ax,ay in ancs])
 
-    # grid corners, (use v to represent corners)
+    # grid 的左上角和右下角的x和y坐标, (use v to represent corners)
     gvs = gridCnrs_ancCnrs[:,:4]
 
     # grid heights and widths
     ghs = gvs[:,2] - gvs[:,0]
     gws = gvs[:,3] - gvs[:,1]
 
-    # anchor corners
+    # anchor 的左上角和右下角的x和y坐标，（相对于自身中心的）
     avs = gridCnrs_ancCnrs[:,4:]
 
     # anchor heights and widthds
