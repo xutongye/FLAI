@@ -5,7 +5,7 @@
 # file to edit: dev_nb/interpretation.ipynb
 
 #================================================
-from exp import nb_anchors_loss_metrics
+from ..exp import nb_anchors_loss_metrics
 
 
 #================================================
