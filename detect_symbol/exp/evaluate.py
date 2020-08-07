@@ -26,7 +26,7 @@ def get_TpFpFn(dl,model,n_clas,hit_thres,filt_thress,device,gaf):
     --hit_thres：预测框与目标框的IoU高于该值则认为该预测框击中（或称匹配）上了该目标
     --filt_thress：一列filt_threshold，得分高于该阈值的预测框才会参加 nms
     --device：torch.device对象
-    --gaf：一个GridAnchor_Funcs对象（见exp/nb_anchors_loss_metrics.py）
+    --gaf：一个GridAnchor_Funcs对象（见exp/anchors_loss_metrics.py）
     '''
     pd = torch.zeros((len(filt_thress),n_clas)) # prediction
     gt = torch.zeros((len(filt_thress),n_clas)) # ground truth
@@ -44,7 +44,7 @@ def get_TpFpFn(dl,model,n_clas,hit_thres,filt_thress,device,gaf):
         mb.child.comment = 'filt_thress'
         for i,filt_thres in enumerate(cb):
             # pb: prediction batch
-            pb_boxs, _, pb_cats, _, _ = nb_interpretation.netouts2preds(batchOut=netOut,
+            pb_boxs, _, pb_cats, _, _ = interpretation.netouts2preds(batchOut=netOut,
                                                                         gaf=gaf,
                                                                         composeConfPrb=True,
                                                                         filt_thres=filt_thres,
@@ -62,7 +62,7 @@ def get_TpFpFn(dl,model,n_clas,hit_thres,filt_thress,device,gaf):
                     pd[i][pred_cats] += pred_cnts
 
                 gt_boxs,gt_clas = y[0][idx],y[1][idx] # gt: ground truch
-                keep = nb_anchors_loss_metrics.get_y(gt_boxs)
+                keep = anchors_loss_metrics.get_y(gt_boxs)
                 if len(keep)>0:
                     gt_boxs = gt_boxs[keep]
                     gt_clas = gt_clas[keep]
@@ -82,7 +82,7 @@ def get_TpFpFn(dl,model,n_clas,hit_thres,filt_thress,device,gaf):
                 #-------- 击中匹配 ---------------------------------------------------------------
                 #---------------------------------------------------------------------------------
                 # 1. 计算IoU匹配矩阵
-                ious = nb_anchors_loss_metrics.iou(p_boxs[:,None,:],gt_boxs[None,:,:])
+                ious = anchors_loss_metrics.iou(p_boxs[:,None,:],gt_boxs[None,:,:])
                 # 2. 仅保留IoU高于阈值的匹配
                 ious = torch.where(ious > hit_thres, ious, tensor(0.,device=device))
 

@@ -5,7 +5,7 @@
 # file to edit: dev_nb/interpretation.ipynb
 
 #================================================
-from ..exp import nb_anchors_loss_metrics
+from ..exp import anchors_loss_metrics
 
 
 #================================================
@@ -74,7 +74,7 @@ def nms(boxes, cats, confs, ov_thres=0.2, despiteCat=True):
         cats_r = cats[idxs]
 
         # 计算剩余与最大的IoU
-        IoU = nb_anchors_loss_metrics.iou(box_mc.reshape(-1,4),boxes_r.reshape(-1,4)).squeeze()
+        IoU = anchors_loss_metrics.iou(box_mc.reshape(-1,4),boxes_r.reshape(-1,4)).squeeze()
 
         # 选择保留
         if despiteCat:
