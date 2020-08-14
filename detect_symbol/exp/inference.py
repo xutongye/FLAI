@@ -5,12 +5,28 @@
 # file to edit: dev_nb/inference.ipynb
 
 #================================================
+from ..exp import interpretation
+
+
+#================================================
+from pathlib import Path
+
+
+#================================================
 import torch
+
+
+#================================================
+from torch import tensor
 
 
 #================================================
 import re
 import os
+
+
+#================================================
+from matplotlib import pyplot as plt
 
 
 #================================================
@@ -148,3 +164,55 @@ class Predictor():
         if self.postProcessor is not None:
             res = self.postProcessor(res)
         return res
+
+
+#================================================
+def savePred_asFig(batch_x,
+                   batch_boxs,
+                   batch_cats,
+                   batch_scores,
+                   classes,
+                   root_path,
+                   suffix='.jpg',
+                   startIdx=0):
+    '''
+    输入原图，nms处理后的模型预测，绘制这些预测并保存为图片。以batch为单位处理。
+    ------------------------------
+    ====参数：
+    -- batch_x：一个batch的图片，像素值应在[0,1]或[0,255]范围内，图片 shape 应为 height * width * channel
+    -- batch_boxs：目标框，每个框表示为（左上角x，左上角y，右下角x，右下角y）
+    -- batch_cats：类别，每个类别以整数表示，该整数作为classes的索引
+    -- batch_scores：目标得分，可以是confidence，也可以是f1得分(=conf*prb/(conf+prb))，你传入什么就打印什么
+    -- classes：一个list，元素为字符串，是各类别的名称，其顺序应与batch_cats对应
+    -- root_path：保存图片的文件夹路径
+    -- suffix：图片文件名后缀，.jpg或.png，默认.jpg
+    -- startIdx：例如设置startIdx=100，则图片名为100.jpg，101.jpg，...（这里以后缀为.jpg为例），该功能是为了防止将已有图片覆盖
+    '''
+    bs = len(batch_cats)
+
+    for i in range(bs):
+        fig,ax = plt.subplots(1,1)
+        ax.axis('off')
+
+        x = batch_x[i]
+        x = x.permute(1,2,0)
+        ax.imshow(x)
+
+        h,w = x.shape[:2]
+        img_s = tensor([h,w,h,w]).to(batch_boxs[0].device)
+
+        boxs = batch_boxs[i]
+        cats = batch_cats[i]
+        scores = batch_scores[i]
+
+        for j in range(len(cats)):
+            box = boxs[j]*img_s
+            interpretation.draw_rect(ax,box,lw=1)
+
+            cat = cats[j]
+            clas = classes[cat][:3]
+            score = scores[j]
+            info = '{}_{:.2f}'.format(clas,score*100)
+            interpretation.draw_text(ax,box[[3,0]],info,sz=8)
+
+        fig.savefig(Path(root_path)/(str(startIdx+i)+suffix))
